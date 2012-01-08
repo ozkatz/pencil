@@ -94,11 +94,11 @@ class Graphite(object):
         # Timers
         for k,v in self.timers.iteritems():
             if len(v) > 0:
-                self.stats.append('%s_count %s %s' % (k, len(v), timestamp))
-                self.stats.append('%s_lower %s %s' % (k, min(v), timestamp))
-                self.stats.append('%s_avg %s %s' % (k, sum(v, 0.0) / len(v), timestamp))
-                self.stats.append('%s_sum %s %s' % (k, sum(v, 0.0), timestamp))
-                self.stats.append('%s_upper %s %s' % (k, max(v), timestamp))
+                self.stats.append('%s.count %s %s' % (k, len(v), timestamp))
+                self.stats.append('%s.lower %s %s' % (k, int(min(v)), timestamp))
+                self.stats.append('%s.avg %s %s' % (k, int(sum(v, 0.0) / len(v)), timestamp))
+                self.stats.append('%s.sum %s %s' % (k, int(sum(v, 0)), timestamp))
+                self.stats.append('%s.upper %s %s' % (k, int(max(v)), timestamp))
 
             # Reset timer.
             self.timers[k] = []
