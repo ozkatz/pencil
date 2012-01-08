@@ -5,8 +5,7 @@ This is more than just a python implementation of statsd. the differences are:
 
 1. Support for gauges (arbitrary numbers) in addition to aggregated counters and timers.
 2. No forced name spaces. up to the client to determine the prefixes for his data.
-3. When counters are empty, nothing is sent. (instead of sending 0). makes for less attractive, but more accurate graphs.
-4. Well, built in python. so no dependency on node.js if it isn't part of your stack.
+3. Well, built in python. so no dependency on node.js if it isn't part of your stack.
 
 Dependencies:
 

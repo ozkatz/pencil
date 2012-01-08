@@ -11,9 +11,17 @@ class Graphite(object):
         host, port = server_addr.split(':')
         self.host = host
         self.port = port
+        
         self.flush_interval = flush_interval
+        
         self.processed = 0
         self.bad_lines = 0
+        
+        # Initialize data
+        self.counters = {}
+        self.gauges = {}
+        self.timers = {}
+        self.stats = []
 
         # collect messages into a buffer in case graphite is down.
         self._buffer = []
@@ -45,11 +53,6 @@ class Graphite(object):
 
 
     def write(self, queue):
-        counters = {}
-        gauges = {}
-        timers = {}
-        stats = []
-
         # Parse and aggregate data.
         for message in queue:
             key, value = message.split(':')
@@ -67,52 +70,58 @@ class Graphite(object):
             
             # Timers
             if msg_type == 'ms':
-                if not key in timers:
-                    timers[key] = []
+                if not key in self.timers:
+                    self.timers[key] = []
                 logging.debug('got timer request. appending to key = %s, value = %s' % (key, float(msg_value)))
-                timers[key].append(float(msg_value))
+                self.timers[key].append(float(msg_value))
             
             # Gauges
             elif msg_type == 'g':
                 logging.debug('got gauge request. setting key = %s, value = %s' % (key, msg_value))
-                gauges[key] = msg_value
+                self.gauges[key] = msg_value
 
             # Counters
             else:
-                if key not in counters:
-                    counters[key] = 0
+                if key not in self.counters:
+                    self.counters[key] = 0
                 logging.debug('got counter request. appending to key = %s, value = %s' % (key, msg_value))
-                counters[key] += float(msg_value)
-                logging.debug('counter request current value = %s' % (counters[key]))
+                self.counters[key] += float(msg_value)
+                logging.debug('counter request current value = %s' % (self.counters[key]))
         
         # aggregate data
         timestamp = get_timestamp()
         
         # Timers
-        for k,v in timers.iteritems():
-            stats.append('%s_count %s %s' % (k, len(v), timestamp))
-            stats.append('%s_lower %s %s' % (k, min(v), timestamp))
-            stats.append('%s_avg %s %s' % (k, sum(v, 0.0) / len(v), timestamp))
-            stats.append('%s_sum %s %s' % (k, sum(v, 0.0), timestamp))
-            stats.append('%s_upper %s %s' % (k, max(v), timestamp))
+        for k,v in self.timers.iteritems():
+            self.stats.append('%s_count %s %s' % (k, len(v), timestamp))
+            self.stats.append('%s_lower %s %s' % (k, min(v), timestamp))
+            self.stats.append('%s_avg %s %s' % (k, sum(v, 0.0) / len(v), timestamp))
+            self.stats.append('%s_sum %s %s' % (k, sum(v, 0.0), timestamp))
+            self.stats.append('%s_upper %s %s' % (k, max(v), timestamp))
+
+            # Reset timer.
+            self.timers[k] = []
         
         # Gauges
-        for k,v in gauges.iteritems():
-            stats.append('%s, %s, %s' % (k, v, timestamp))
+        for k,v in self.gauges.iteritems():
+            self.stats.append('%s, %s, %s' % (k, v, timestamp))
 
         # Counters
-        for k,v in counters.iteritems():
+        for k,v in self.counters.iteritems():
             if v == 0:
-                stats.append('%s %s %s' % (k, v, timestamp))
+                self.stats.append('%s %s %s' % (k, v, timestamp))
             else:
-                stats.append('%s %s %s' % (k, v / self.flush_interval, timestamp))
+                self.stats.append('%s %s %s' % (k, v / self.flush_interval, timestamp))
+            
+            # Reset counter
+            self.counters[k] = 0
         
-        logging.debug('about to send the following messages: %s' % (stats))
+        logging.debug('about to send the following messages: %s' % (self.stats))
         
 
         # Send over to graphite server.
-        if len(stats) > 0:
-            msg = '\n'.join(stats)
+        if len(self.stats) > 0:
+            msg = '\n'.join(self.stats)
             self._buffer.append(msg)
 
         if len(self._buffer) > 0:
