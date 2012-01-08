@@ -1,0 +1,2 @@
+Cython==0.15.1
+-e git+git://github.com/schmir/gevent.git#egg=gevent
