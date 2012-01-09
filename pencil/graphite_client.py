@@ -110,11 +110,11 @@ class Graphite(object):
         # Counters
         for k,v in self.counters.iteritems():
             if v == 0:
+                self.stats.append('%s_per_second %s %s' % (k, v, timestamp))
                 self.stats.append('%s %s %s' % (k, v, timestamp))
-                self.stats.append('%s_raw %s %s' % (k, v, timestamp))
             else:
-                self.stats.append('%s %s %s' % (k, v / self.flush_interval, timestamp))
-                self.stats.append('%s_raw %s %s' % (k, v, timestamp))
+                self.stats.append('%s_per_second %s %s' % (k, v / self.flush_interval, timestamp))
+                self.stats.append('%s %s %s' % (k, v, timestamp))
             
             # Reset counter
             self.counters[k] = 0
