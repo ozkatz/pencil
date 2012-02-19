@@ -1,6 +1,7 @@
 """
 The Graphite class is a basic Graphite (http://graphite.wikidot.com/) client.
 Currently, it is heavily coupled to the Pencil aggregation server.
+since it's a simple protocol, There is little need to ever decouple the two.
 """
 
 import time
@@ -12,7 +13,7 @@ def get_timestamp():
 
 class Graphite(object):
     """
-    this task does the following:
+    The Graphite client class. Does the following:
     1. crunch out the counters, gauges and timers from pencil into
        graphite-protocol strings.
     2. write these stats into a transient buffer
