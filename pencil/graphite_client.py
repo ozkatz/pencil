@@ -1,3 +1,8 @@
+"""
+The Graphite class is a basic Graphite (http://graphite.wikidot.com/) client.
+Currently, it is heavily coupled to the Pencil aggregation server.
+"""
+
 import time
 import logging
 from gevent import socket 
@@ -6,7 +11,15 @@ def get_timestamp():
     return int(time.time())
 
 class Graphite(object):
-
+    """
+    this task does the following:
+    1. crunch out the counters, gauges and timers from pencil into
+       graphite-protocol strings.
+    2. write these stats into a transient buffer
+    3. "flush" this buffer into graphite. if graphite is not available,
+       keep messages in the buffer until flushing succeeds.
+    4. repeat.
+    """
     def __init__(self, server_addr, flush_interval):
         host, port = server_addr.split(':')
         self.host = host
@@ -92,6 +105,8 @@ class Graphite(object):
         timestamp = get_timestamp()
         
         # Timers
+        # for each timer, save the raw count, min value, avg value,
+        # sum and max. value during this time period.
         for k,v in self.timers.iteritems():
             if len(v) > 0:
                 self.stats.append('%s.count %s %s' % (k, len(v), timestamp))
@@ -108,6 +123,7 @@ class Graphite(object):
             self.stats.append('%s, %s, %s' % (k, v, timestamp))
 
         # Counters
+        # Calculate how many occurances happend, on avarage, per second.
         for k,v in self.counters.iteritems():
             if v == 0:
                 self.stats.append('%s_per_second %s %s' % (k, v, timestamp))

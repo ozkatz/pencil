@@ -11,7 +11,7 @@ This is more than just a python implementation of statsd. the differences are:
 Installation
 ------------
 
-dependencies are described requirements.txt (pip installable).
+dependencies are described requirements.txt (`pip` installable).
 but basically you need only python > 2.5 (tested against python 2.6 and python 2.7)
 and the gevent (http://gevent.org) library for the nifty async I/O stuff.
 in order to build gevent (latest version in pypi is too old), you need Cython installed.
@@ -23,8 +23,7 @@ A log file will be created in the local directory, with minimal information bein
 pencil is compatible with most current statsd clients, although the pencil-client library is good reference
 in case you also want gauges.
 
-Changing settings:
-Simply run `./pencil.py /path/to/settings.json &`
+for non default settings, simply run: `./pencil.py /path/to/settings_file.json &`
 
 Available settings
 ------------------

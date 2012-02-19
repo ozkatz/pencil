@@ -1,10 +1,21 @@
+"""
+Pencil's command server.
+A telnet interface for probing and querying a Pencil server instance.
+This file defines the available commands, as well as define the command
+server interface, accepting these commands.
+"""
+
 import logging
 from gevent.server import StreamServer
 
 
 # Command actions.
 class BaseCommand(object):
-
+    """
+    A baseline for all commands to inherit from.
+    basically defines the execute(*args) method,
+    and holds a reference to the pencil server instance.
+    """
     def __init__(self, pencil_server):
         self.pencil_server = pencil_server
     
@@ -13,13 +24,19 @@ class BaseCommand(object):
 
 
 class ShowStorageCommand(BaseCommand):
-
+    """
+    print out the raw message buffer currently stored 
+    by the pencil server instance.
+    """
     def execute(self, *args):
         return str(self.pencil_server._listener.message_buffer)
 
 
 class ShowStatusCommand(BaseCommand):
-
+    """
+    Print out the server's start date
+    and the amount of handled requests
+    """
     def execute(self, *args):
         return 'up since %s, total requests: %s' % (
             self.pencil_server.start_date,
@@ -28,32 +45,42 @@ class ShowStatusCommand(BaseCommand):
 
 
 class StopServerCommand(BaseCommand):
-
+    """
+    Stop the pencil server instance.
+    """
     def execute(self, *args):
         self.pencil_server.stop()
         return 'shutting down server.'
 
 
 class GraphiteTimers(BaseCommand):
-
+    """
+    print the currently aggregated timers for this pencil instance.
+    """
     def execute(self, *args):
         return str(self.pencil_server.graphite.timers)
 
 
 class GraphiteCounters(BaseCommand):
-
+    """
+    print the currently aggregated counters for this pencil instance.
+    """
     def execute(self, *args):
         return str(self.pencil_server.graphite.counters)
 
 
 class GraphiteGauges(BaseCommand):
-
+    """
+    print the currently aggregated gauges for this pencil instance.
+    """
     def execute(self, *args):
         return str(self.pencil_server.graphite.gauges)
 
 # The actual server class
 class CommandServer(object):
-
+    """
+    this class holds the logic for running commands and serving clients.
+    """
     commands =  {
         'storage': ShowStorageCommand,
         'status' : ShowStatusCommand,
@@ -77,8 +104,11 @@ class CommandServer(object):
 
 
     def server(self, socket, address):
+        """
+        this method will be used to build a TCP server (`StreamServer`) by gevent
+        """
         fileobj = socket.makefile()
-        fileobj.write('Welcome to the echo server! Type quit to exit.\r\n')
+        fileobj.write('Welcome to pencil\'s command server. Type quit to exit.\r\n')
         logging.debug('new connection from ' + str(address))
         fileobj.flush()
         while True:

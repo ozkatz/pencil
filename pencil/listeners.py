@@ -1,3 +1,8 @@
+"""
+This is the application side interface.
+the UDP listener is a lean and mean component that takes a message from a pencil (or statsd) client,
+and adds it to the current message buffer for the running pencil server.
+"""
 import logging
 from gevent.server import DatagramServer
 
